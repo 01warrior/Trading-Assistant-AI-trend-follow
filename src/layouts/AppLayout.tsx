@@ -16,7 +16,7 @@ export function AppLayout() {
       
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         {/* Top Header */}
-        <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 md:px-8 absolute top-0 left-0 right-0 z-10">
+        <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-3 md:px-6 absolute top-0 left-0 right-0 z-10">
           <div>
             <h2 className="text-base md:text-lg font-semibold text-gray-900">Aperçu du Marché</h2>
           </div>
@@ -56,7 +56,7 @@ export function AppLayout() {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto pt-20 md:pt-28 p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto pt-20 md:pt-28 p-3 md:p-6">
           <div className="w-full max-w-[1600px] mx-auto">
             <Outlet />
           </div>
