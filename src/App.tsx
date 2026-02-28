@@ -11,6 +11,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { JournalPage } from "./pages/JournalPage";
 import { ChartPage } from "./pages/ChartPage";
 import { NewsPage } from "./pages/NewsPage";
+import { SettingsPage } from "./pages/SettingsPage";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="journal" element={<JournalPage />} />
             <Route path="chart" element={<ChartPage />} />
             <Route path="news" element={<NewsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
