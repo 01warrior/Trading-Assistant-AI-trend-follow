@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, X, TrendingUp, TrendingDown, DollarSign, Clock, CheckCircle2 } from "lucide-react";
-import { Trade, saveTrade, updateTrade, getTrades, calculatePnL } from "../services/storage";
+import { Plus, X, TrendingUp, TrendingDown, DollarSign, Clock, CheckCircle2, Trash2 } from "lucide-react";
+import { Trade, saveTrade, updateTrade, deleteTrade, calculatePnL } from "../services/storage";
 import { cn } from "../lib/utils";
 import { useMultiPrice } from "../hooks/useMultiPrice";
+import { useAppContext } from "../context/AppContext";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 interface TradeTrackerProps {
   currentPrice: number;
@@ -14,8 +16,9 @@ interface TradeTrackerProps {
 }
 
 export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, suggestedType, baseAmount }: TradeTrackerProps) {
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const { trades, refreshTrades, setBaseAmount } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   
   // Get all unique symbols from open trades to track their prices
   const openTradeSymbols = Array.from(new Set(trades.filter(t => t.status === "OPEN").map(t => t.symbol)));
@@ -29,10 +32,6 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
   const [stopLoss, setStopLoss] = useState("");
 
   const hasPopulatedRef = useRef(false);
-
-  useEffect(() => {
-    setTrades(getTrades());
-  }, []);
 
   // Set default entry price to current price when opening form
   useEffect(() => {
@@ -63,13 +62,14 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
 
   const handleAddTrade = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !entryPrice || !targetPrice || !stopLoss) return;
+    const tradeAmount = parseFloat(amount);
+    if (!tradeAmount || !entryPrice || !targetPrice || !stopLoss) return;
 
     const newTrade: Trade = {
       id: Date.now().toString(),
       symbol,
       type,
-      amount: parseFloat(amount),
+      amount: tradeAmount,
       entryPrice: parseFloat(entryPrice),
       targetPrice: parseFloat(targetPrice),
       stopLoss: parseFloat(stopLoss),
@@ -78,7 +78,8 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
     };
 
     saveTrade(newTrade);
-    setTrades(getTrades());
+    setBaseAmount(baseAmount - tradeAmount); // Deduct from balance
+    refreshTrades();
     setIsAdding(false);
     
     // Reset form
@@ -90,6 +91,7 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
 
   const handleCloseTrade = (trade: Trade) => {
     const tradePrice = livePrices[trade.symbol] || currentPrice;
+    const pnl = calculatePnL(trade, tradePrice);
     const updatedTrade: Trade = {
       ...trade,
       status: "CLOSED",
@@ -97,7 +99,20 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
       closedAt: Date.now(),
     };
     updateTrade(updatedTrade);
-    setTrades(getTrades());
+    setBaseAmount(baseAmount + trade.amount + pnl); // Return amount + PnL
+    refreshTrades();
+  };
+
+  const handleDeleteTrade = () => {
+    if (deleteId) {
+      const tradeToDelete = trades.find(t => t.id === deleteId);
+      if (tradeToDelete && tradeToDelete.status === "OPEN") {
+        setBaseAmount(baseAmount + tradeToDelete.amount);
+      }
+      deleteTrade(deleteId);
+      refreshTrades();
+      setDeleteId(null);
+    }
   };
 
   const openTrades = trades.filter(t => t.status === "OPEN");
@@ -105,6 +120,15 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+      <ConfirmationModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDeleteTrade}
+        title="Supprimer le trade ?"
+        message="Cette action est irréversible. Les données de ce trade seront définitivement effacées du stockage local."
+        confirmText="Supprimer"
+        type="danger"
+      />
       <div className="p-6 border-b border-gray-100 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Journal de Trading</h2>
@@ -226,26 +250,35 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
                         </span>
                         <span className="font-semibold text-gray-900">{trade.symbol}</span>
                       </div>
-                      <div className={cn(
-                        "font-mono font-bold text-lg",
-                        isProfitable ? "text-emerald-600" : "text-rose-600"
-                      )}>
-                        {isProfitable ? "+" : ""}{pnl.toFixed(2)}$
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "font-mono font-bold text-lg",
+                          isProfitable ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                          {isProfitable ? "+" : ""}{pnl.toFixed(2)}$
+                        </div>
+                        <button 
+                          onClick={() => setDeleteId(trade.id)}
+                          className="p-1 text-gray-400 hover:text-rose-500 transition-colors"
+                          title="Supprimer définitivement"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
                       <div>
                         <div className="text-gray-500 text-xs">Entrée</div>
-                        <div className="font-mono font-medium">{trade.entryPrice}</div>
+                        <div className="font-mono font-medium">{trade.entryPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</div>
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs">Montant</div>
-                        <div className="font-mono font-medium">{trade.amount}$</div>
+                        <div className="font-mono font-medium">{trade.amount.toFixed(2)}$</div>
                       </div>
                       <div className="text-right">
                         <div className="text-gray-500 text-xs">Actuel</div>
-                        <div className="font-mono font-medium">{tradePrice}</div>
+                        <div className="font-mono font-medium">{tradePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</div>
                       </div>
                     </div>
 
@@ -284,16 +317,25 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
                         </span>
                         <span className="font-medium text-gray-700 text-sm">{trade.symbol}</span>
                       </div>
-                      <div className={cn(
-                        "font-mono font-bold",
-                        isProfitable ? "text-emerald-600" : "text-rose-600"
-                      )}>
-                        {isProfitable ? "+" : ""}{pnl.toFixed(2)}$
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "font-mono font-bold",
+                          isProfitable ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                          {isProfitable ? "+" : ""}{pnl.toFixed(2)}$
+                        </div>
+                        <button 
+                          onClick={() => setDeleteId(trade.id)}
+                          className="p-1 text-gray-400 hover:text-rose-500 transition-colors"
+                          title="Supprimer définitivement"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 font-mono">
-                      <span>In: {trade.entryPrice}</span>
-                      <span>Out: {trade.exitPrice}</span>
+                      <span>In: {trade.entryPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
+                      <span>Out: {trade.exitPrice?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
                     </div>
                   </div>
                 );

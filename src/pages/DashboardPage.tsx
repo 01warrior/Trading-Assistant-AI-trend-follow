@@ -12,7 +12,7 @@ import Skeleton from "react-loading-skeleton";
 import { sendTelegramMessage } from "../services/telegramService";
 
 export function DashboardPage() {
-  const { symbol, baseAmount } = useAppContext();
+  const { symbol, baseAmount, setBaseAmount, refreshTrades } = useAppContext();
   const { data, isLoading } = useMarketData(symbol);
   const { news } = useNews();
 
@@ -56,6 +56,8 @@ export function DashboardPage() {
     };
 
     saveTrade(newTrade);
+    setBaseAmount(baseAmount - positionSizeUsd); // Deduct from balance
+    refreshTrades(); // Refresh global state
     toast.success("Trade enregistré !", {
       description: `Position ${suggestedType} sur ${symbol} ajoutée à l'historique.`,
     });

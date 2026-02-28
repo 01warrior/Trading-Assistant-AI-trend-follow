@@ -5,6 +5,7 @@ import { FloatingChat } from "../components/FloatingChat";
 import { Wallet } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { SYMBOLS } from "../constants";
+import { cn } from "../lib/utils";
 
 // Import pages to keep them mounted (IndexedStack behavior)
 import { DashboardPage } from "../pages/DashboardPage";
@@ -33,7 +34,10 @@ export function AppLayout() {
       
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         {/* Top Header */}
-        <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-3 md:px-6 absolute top-0 left-0 right-0 z-10">
+        <header className={cn(
+          "h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-3 md:px-6 z-10",
+          location.pathname === "/chart" ? "relative" : "absolute top-0 left-0 right-0"
+        )}>
           <div>
             <h2 className="text-base md:text-lg font-semibold text-gray-900">
               {pages.find(p => p.path === location.pathname)?.path === "/" ? "Aperçu du Marché" : 
@@ -78,12 +82,21 @@ export function AppLayout() {
         </header>
 
         {/* Page Content (IndexedStack Implementation) */}
-        <div className="flex-1 overflow-y-auto pt-20 md:pt-28 p-3 md:p-6">
-          <div className="w-full max-w-[1600px] mx-auto h-full">
+        <div className={cn(
+          "flex-1 flex flex-col",
+          location.pathname === "/chart" ? "pt-0 overflow-hidden pb-0" : "pt-20 md:pt-28 overflow-y-auto pb-4 md:pb-10"
+        )}>
+          <div className={cn(
+            "mx-auto flex-1 flex flex-col",
+            location.pathname === "/chart" ? "w-full" : "w-full max-w-[1600px] px-4 md:px-10"
+          )}>
             {pages.map((page) => (
               <div 
                 key={page.path} 
-                className={location.pathname === page.path ? "block h-full" : "hidden"}
+                className={cn(
+                  "w-full flex-1",
+                  location.pathname === page.path ? "flex flex-col" : "hidden"
+                )}
               >
                 {page.component}
               </div>

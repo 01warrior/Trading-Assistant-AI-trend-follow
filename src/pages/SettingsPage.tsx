@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import { Cpu, Bell, Plus, Trash2, ShieldCheck, Info } from "lucide-react";
+import { Cpu, Bell, Plus, Trash2, ShieldCheck, Info, Wallet } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { cn } from "../lib/utils";
 import { getTelegramRecipients, saveTelegramRecipients } from "../services/telegramService";
 import { toast } from "sonner";
+import { ConfirmationModal } from "../components/ConfirmationModal";
 
 export function SettingsPage() {
-  const { model, setModel } = useAppContext();
+  const { model, setModel, baseAmount, setBaseAmount } = useAppContext();
   const [recipients, setRecipients] = useState<string[]>([]);
   const [newId, setNewId] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [tempBalance, setTempBalance] = useState(baseAmount.toString());
 
   const PRIMARY_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
   const GROUP_ID = import.meta.env.VITE_TELEGRAM_GROUP_ID;
@@ -16,6 +19,19 @@ export function SettingsPage() {
   useEffect(() => {
     setRecipients(getTelegramRecipients());
   }, []);
+
+  useEffect(() => {
+    setTempBalance(baseAmount.toString());
+  }, [baseAmount]);
+
+  const handleUpdateBalance = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(tempBalance);
+    if (!isNaN(val)) {
+      setBaseAmount(val);
+      toast.success("Capital mis à jour !");
+    }
+  };
 
   const handleAddRecipient = () => {
     if (!newId.trim()) return;
@@ -30,15 +46,19 @@ export function SettingsPage() {
     toast.success("Destinataire ajouté !");
   };
 
-  const handleRemoveRecipient = (id: string) => {
-    if (id === PRIMARY_ID || id === GROUP_ID) {
+  const handleRemoveRecipient = () => {
+    if (!deleteId) return;
+    
+    if (deleteId === PRIMARY_ID || deleteId === GROUP_ID) {
       toast.error("Cet ID est protégé et ne peut pas être supprimé.");
+      setDeleteId(null);
       return;
     }
-    const updated = recipients.filter(r => r !== id);
+    const updated = recipients.filter(r => r !== deleteId);
     setRecipients(updated);
     saveTelegramRecipients(updated);
     toast.success("Destinataire supprimé.");
+    setDeleteId(null);
   };
 
   const models = [
@@ -55,7 +75,16 @@ export function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="w-full space-y-8">
+      <ConfirmationModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleRemoveRecipient}
+        title="Supprimer le destinataire ?"
+        message="Cet ID ne recevra plus de notifications de trading. Vous pourrez le rajouter plus tard si besoin."
+        confirmText="Supprimer"
+        type="danger"
+      />
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">
           Paramètres
@@ -66,6 +95,40 @@ export function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Portfolio Settings */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Portefeuille & Capital</h2>
+          </div>
+
+          <form onSubmit={handleUpdateBalance} className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-gray-700">Capital Initial / Actuel (USDT)</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  step="any"
+                  value={tempBalance}
+                  onChange={(e) => setTempBalance(e.target.value)}
+                  className="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                />
+                <button
+                  type="submit"
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 transition-colors font-semibold"
+                >
+                  Mettre à jour
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 italic">
+                Ce montant sera automatiquement débité lors de l'ouverture d'un trade et crédité (avec profit/perte) lors de la fermeture.
+              </p>
+            </div>
+          </form>
+        </div>
+
         {/* AI Model Settings */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-6">
           <div className="flex items-center gap-3">
@@ -185,7 +248,7 @@ export function SettingsPage() {
                       </button>
                       {id !== PRIMARY_ID && id !== GROUP_ID && (
                         <button
-                          onClick={() => handleRemoveRecipient(id)}
+                          onClick={() => setDeleteId(id)}
                           className="p-1.5 text-gray-400 hover:text-rose-500 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />

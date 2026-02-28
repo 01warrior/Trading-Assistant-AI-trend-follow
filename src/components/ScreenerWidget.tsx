@@ -11,7 +11,7 @@ export function ScreenerWidget() {
   const topResults = results.filter(r => r.score >= 3).slice(0, 5); // Show top 5 with score >= 3
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1">Screener IA</h2>

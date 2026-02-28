@@ -32,6 +32,12 @@ export function getTrades(): Trade[] {
   return stored ? JSON.parse(stored) : [];
 }
 
+export function deleteTrade(id: string) {
+  const trades = getTrades();
+  const filtered = trades.filter((t) => t.id !== id);
+  localStorage.setItem("trading_assistant_trades", JSON.stringify(filtered));
+}
+
 export function calculatePnL(trade: Trade, currentPrice: number): number {
   const priceToUse = trade.status === "CLOSED" && trade.exitPrice ? trade.exitPrice : currentPrice;
   const difference = trade.type === "BUY" ? priceToUse - trade.entryPrice : trade.entryPrice - priceToUse;

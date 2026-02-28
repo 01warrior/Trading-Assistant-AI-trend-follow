@@ -89,8 +89,8 @@ export function FloatingChat() {
             }}
             exit={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
             className={cn(
-              "bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden mb-4 w-[calc(100vw-3rem)] sm:w-[420px]",
-              isMinimized ? "h-auto" : "h-[60vh] sm:h-[600px]"
+              "bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden mb-4 w-[calc(100vw-3rem)] sm:w-[420px] md:w-[550px]",
+              isMinimized ? "h-auto" : "h-[60vh] sm:h-[600px] md:h-[750px] max-h-[calc(100vh-140px)]"
             )}
           >
             {/* Header */}

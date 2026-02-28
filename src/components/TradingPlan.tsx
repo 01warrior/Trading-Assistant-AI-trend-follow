@@ -48,7 +48,7 @@ export function TradingPlan({ symbol, conditions, canTrade, onSaveTrade, isLoadi
   else if (score >= 3) scoreColor = "text-orange-600 bg-orange-50 border-orange-200";
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-6 h-full">
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-6">
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1">Plan de Trading</h2>
