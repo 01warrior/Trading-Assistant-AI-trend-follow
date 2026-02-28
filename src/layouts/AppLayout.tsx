@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar";
 import { MobileNav } from "../components/MobileNav";
 import { FloatingChat } from "../components/FloatingChat";
@@ -6,8 +6,25 @@ import { Wallet } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { SYMBOLS } from "../constants";
 
+// Import pages to keep them mounted (IndexedStack behavior)
+import { DashboardPage } from "../pages/DashboardPage";
+import { JournalPage } from "../pages/JournalPage";
+import { ChartPage } from "../pages/ChartPage";
+import { NewsPage } from "../pages/NewsPage";
+import { SettingsPage } from "../pages/SettingsPage";
+
 export function AppLayout() {
   const { symbol, setSymbol, baseAmount, setBaseAmount } = useAppContext();
+  const location = useLocation();
+
+  // Map routes to components for IndexedStack behavior
+  const pages = [
+    { path: "/", component: <DashboardPage /> },
+    { path: "/journal", component: <JournalPage /> },
+    { path: "/chart", component: <ChartPage /> },
+    { path: "/news", component: <NewsPage /> },
+    { path: "/settings", component: <SettingsPage /> },
+  ];
 
   return (
     <div className="flex min-h-screen bg-[#f0f4f9] text-[#1f1f1f] font-sans pb-20 md:pb-0">
@@ -18,7 +35,12 @@ export function AppLayout() {
         {/* Top Header */}
         <header className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-3 md:px-6 absolute top-0 left-0 right-0 z-10">
           <div>
-            <h2 className="text-base md:text-lg font-semibold text-gray-900">Aperçu du Marché</h2>
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">
+              {pages.find(p => p.path === location.pathname)?.path === "/" ? "Aperçu du Marché" : 
+               pages.find(p => p.path === location.pathname)?.path === "/journal" ? "Historique des Trades" :
+               pages.find(p => p.path === location.pathname)?.path === "/chart" ? "Analyse Graphique" :
+               pages.find(p => p.path === location.pathname)?.path === "/news" ? "Actualités Crypto" : "Paramètres"}
+            </h2>
           </div>
           
           <div className="flex items-center gap-2 md:gap-4 bg-white p-1 md:p-1.5 rounded-full shadow-sm border border-gray-100">
@@ -55,10 +77,17 @@ export function AppLayout() {
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content (IndexedStack Implementation) */}
         <div className="flex-1 overflow-y-auto pt-20 md:pt-28 p-3 md:p-6">
-          <div className="w-full max-w-[1600px] mx-auto">
-            <Outlet />
+          <div className="w-full max-w-[1600px] mx-auto h-full">
+            {pages.map((page) => (
+              <div 
+                key={page.path} 
+                className={location.pathname === page.path ? "block h-full" : "hidden"}
+              >
+                {page.component}
+              </div>
+            ))}
           </div>
         </div>
 

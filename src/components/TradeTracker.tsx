@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, X, TrendingUp, TrendingDown, DollarSign, Clock, CheckCircle2 } from "lucide-react";
 import { Trade, saveTrade, updateTrade, getTrades, calculatePnL } from "../services/storage";
 import { cn } from "../lib/utils";
+import { useMultiPrice } from "../hooks/useMultiPrice";
 
 interface TradeTrackerProps {
   currentPrice: number;
@@ -15,6 +16,10 @@ interface TradeTrackerProps {
 export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, suggestedType, baseAmount }: TradeTrackerProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  
+  // Get all unique symbols from open trades to track their prices
+  const openTradeSymbols = Array.from(new Set(trades.filter(t => t.status === "OPEN").map(t => t.symbol)));
+  const livePrices = useMultiPrice(openTradeSymbols);
   
   // Form state
   const [type, setType] = useState<"BUY" | "SELL">("BUY");
@@ -84,10 +89,11 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
   };
 
   const handleCloseTrade = (trade: Trade) => {
+    const tradePrice = livePrices[trade.symbol] || currentPrice;
     const updatedTrade: Trade = {
       ...trade,
       status: "CLOSED",
-      exitPrice: currentPrice,
+      exitPrice: tradePrice,
       closedAt: Date.now(),
     };
     updateTrade(updatedTrade);
@@ -204,7 +210,8 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {openTrades.map((trade) => {
-                const pnl = calculatePnL(trade, currentPrice);
+                const tradePrice = livePrices[trade.symbol] || (trade.symbol === symbol ? currentPrice : trade.entryPrice);
+                const pnl = calculatePnL(trade, tradePrice);
                 const isProfitable = pnl >= 0;
 
                 return (
@@ -238,7 +245,7 @@ export function TradeTracker({ currentPrice, symbol, suggestedSL, suggestedTP, s
                       </div>
                       <div className="text-right">
                         <div className="text-gray-500 text-xs">Actuel</div>
-                        <div className="font-mono font-medium">{currentPrice}</div>
+                        <div className="font-mono font-medium">{tradePrice}</div>
                       </div>
                     </div>
 
