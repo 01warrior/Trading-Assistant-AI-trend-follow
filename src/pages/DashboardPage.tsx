@@ -2,7 +2,6 @@ import { useMarketData } from "../hooks/useMarketData";
 import { useNews } from "../hooks/useNews";
 import { useAppContext } from "../context/AppContext";
 import { TradingPlan } from "../components/TradingPlan";
-import { Chat } from "../components/Chat";
 import { ScreenerWidget } from "../components/ScreenerWidget";
 import { Activity, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -17,15 +16,6 @@ export function DashboardPage() {
 
   const { conditions, canTrade } = calculateTradingPlan(data);
   const isRsiValid = data.rsi >= 40 && data.rsi <= 60;
-
-  const topHeadlines = news.slice(0, 5).map(n => n.title);
-
-  const chatContext = {
-    symbol,
-    ...data,
-    baseAmount,
-    newsHeadlines: topHeadlines,
-  };
 
   const handleSaveTrade = () => {
     if (!canTrade) return;
@@ -121,11 +111,6 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         <ScreenerWidget />
         <TradingPlan conditions={conditions} canTrade={canTrade} onSaveTrade={handleSaveTrade} />
-      </div>
-
-      {/* Bottom Row: Chat */}
-      <div className="w-full">
-        <Chat context={chatContext} />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar";
+import { FloatingChat } from "../components/FloatingChat";
 import { Wallet } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 
@@ -55,6 +56,9 @@ export function AppLayout() {
             <Outlet />
           </div>
         </div>
+
+        {/* Global Floating Chat */}
+        <FloatingChat />
       </main>
     </div>
   );
