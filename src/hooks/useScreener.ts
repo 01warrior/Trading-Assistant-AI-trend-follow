@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchKlines } from "../services/binance";
 import { calculateRSI } from "../lib/indicators";
 import { calculateTradingPlan } from "../lib/tradingPlan";
 import { SYMBOLS } from "../constants";
 import { analyzeMarketData } from "../lib/marketUtils";
+import { sendTelegramMessage } from "../services/telegramService";
 
 export interface ScreenerResult {
   symbol: string;
@@ -17,6 +18,7 @@ export function useScreener() {
   const [results, setResults] = useState<ScreenerResult[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScan, setLastScan] = useState<Date | null>(null);
+  const notifiedSymbols = useRef<Set<string>>(new Set());
 
   const scan = async () => {
     setIsScanning(true);
@@ -76,6 +78,30 @@ export function useScreener() {
       scanResults.sort((a, b) => b.score - a.score);
       setResults(scanResults);
       setLastScan(new Date());
+
+      // Notify for high score setups
+      const highScores = scanResults.filter(r => r.score >= 4);
+      if (highScores.length > 0) {
+        let notificationMessage = "🔍 *Alertes Screener IA (Score ≥ 4)*\n\n";
+        let shouldNotify = false;
+
+        highScores.forEach(r => {
+          if (!notifiedSymbols.current.has(r.symbol)) {
+            notificationMessage += `• *${r.symbol}*: Score ${r.score}/${r.maxScore} (${r.trend})\n`;
+            notifiedSymbols.current.add(r.symbol);
+            shouldNotify = true;
+          }
+        });
+
+        if (shouldNotify) {
+          sendTelegramMessage(notificationMessage);
+        }
+      }
+
+      // Clear notified symbols every hour to allow re-notification
+      if (lastScan && new Date().getTime() - lastScan.getTime() > 60 * 60 * 1000) {
+        notifiedSymbols.current.clear();
+      }
     } catch (error) {
       console.error("Screener failed", error);
     } finally {

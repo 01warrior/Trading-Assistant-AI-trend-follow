@@ -3,8 +3,10 @@ import { CheckCircle2, Circle, Star } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
 import Skeleton from "react-loading-skeleton";
+import { sendTelegramMessage } from "../services/telegramService";
 
 interface TradingPlanProps {
+  symbol: string;
   conditions: {
     id: string;
     label: string;
@@ -16,7 +18,7 @@ interface TradingPlanProps {
   isLoading?: boolean;
 }
 
-export function TradingPlan({ conditions, canTrade, onSaveTrade, isLoading }: TradingPlanProps) {
+export function TradingPlan({ symbol, conditions, canTrade, onSaveTrade, isLoading }: TradingPlanProps) {
   const score = conditions.filter(c => c.isMet).length;
   const maxScore = conditions.length;
   const prevCanTrade = useRef(canTrade);
@@ -27,6 +29,10 @@ export function TradingPlan({ conditions, canTrade, onSaveTrade, isLoading }: Tr
         description: "Toutes les conditions de votre plan de trading sont réunies.",
         duration: 5000,
       });
+
+      // Send Telegram Notification
+      const message = `🚀 *Setup Valide sur ${symbol}*\n\nToutes les conditions de votre plan de trading sont réunies. Prêt à trader !`;
+      sendTelegramMessage(message);
       
       try {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');

@@ -9,6 +9,7 @@ import { calculateTradingPlan } from "../lib/tradingPlan";
 import { saveTrade } from "../services/storage";
 import { toast } from "sonner";
 import Skeleton from "react-loading-skeleton";
+import { sendTelegramMessage } from "../services/telegramService";
 
 export function DashboardPage() {
   const { symbol, baseAmount } = useAppContext();
@@ -58,6 +59,10 @@ export function DashboardPage() {
     toast.success("Trade enregistré !", {
       description: `Position ${suggestedType} sur ${symbol} ajoutée à l'historique.`,
     });
+
+    // Send Telegram Notification
+    const message = `✅ *Trade Enregistré*\n\n*Paire:* ${symbol}\n*Type:* ${suggestedType}\n*Entrée:* ${data.currentPrice.toFixed(2)}\n*SL:* ${suggestedSL.toFixed(2)}\n*TP:* ${suggestedTP.toFixed(2)}\n*Taille:* ${positionSizeUsd.toFixed(2)} USDT`;
+    sendTelegramMessage(message);
   };
 
   return (
@@ -111,7 +116,7 @@ export function DashboardPage() {
       {/* Middle Row: Screener & Plan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         <ScreenerWidget />
-        <TradingPlan conditions={conditions} canTrade={canTrade} onSaveTrade={handleSaveTrade} isLoading={isLoading} />
+        <TradingPlan symbol={symbol} conditions={conditions} canTrade={canTrade} onSaveTrade={handleSaveTrade} isLoading={isLoading} />
       </div>
     </div>
   );
