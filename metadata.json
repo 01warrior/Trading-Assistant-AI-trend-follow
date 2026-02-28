@@ -1,0 +1,5 @@
+{
+  "name": "Trading Assistant AI",
+  "description": "Assistant de trading avec suivi de plan, indicateurs en temps réel (EMA, RSI) et intégration Gemini 2.5 Flash pour l'analyse.",
+  "requestFramePermissions": []
+}
