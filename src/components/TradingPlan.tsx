@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { CheckCircle2, Circle, Star } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
+import Skeleton from "react-loading-skeleton";
 
 interface TradingPlanProps {
   conditions: {
@@ -12,15 +13,16 @@ interface TradingPlanProps {
   }[];
   canTrade: boolean;
   onSaveTrade?: () => void;
+  isLoading?: boolean;
 }
 
-export function TradingPlan({ conditions, canTrade, onSaveTrade }: TradingPlanProps) {
+export function TradingPlan({ conditions, canTrade, onSaveTrade, isLoading }: TradingPlanProps) {
   const score = conditions.filter(c => c.isMet).length;
   const maxScore = conditions.length;
   const prevCanTrade = useRef(canTrade);
 
   useEffect(() => {
-    if (canTrade && !prevCanTrade.current) {
+    if (canTrade && !prevCanTrade.current && !isLoading) {
       toast.success("Setup Valide !", {
         description: "Toutes les conditions de votre plan de trading sont réunies.",
         duration: 5000,
@@ -33,7 +35,7 @@ export function TradingPlan({ conditions, canTrade, onSaveTrade }: TradingPlanPr
       } catch (e) {}
     }
     prevCanTrade.current = canTrade;
-  }, [canTrade]);
+  }, [canTrade, isLoading]);
 
   let scoreColor = "text-rose-600 bg-rose-50 border-rose-200";
   if (score === maxScore) scoreColor = "text-emerald-600 bg-emerald-50 border-emerald-200";
@@ -46,77 +48,99 @@ export function TradingPlan({ conditions, canTrade, onSaveTrade }: TradingPlanPr
           <h2 className="text-xl font-semibold text-gray-900 mb-1">Plan de Trading</h2>
           <p className="text-sm text-gray-500">Vérification automatique des conditions</p>
         </div>
-        <div className={cn("flex flex-col items-center justify-center px-3 py-1.5 rounded-xl border", scoreColor)}>
-          <div className="flex items-center gap-1 mb-0.5">
-            {[...Array(maxScore)].map((_, i) => (
-              <Star key={i} className={cn("w-3.5 h-3.5", i < score ? "fill-current" : "text-gray-300 fill-transparent")} />
-            ))}
-          </div>
-          <span className="text-xs font-bold uppercase tracking-wider">Score: {score}/{maxScore}</span>
+        <div className={cn("flex flex-col items-center justify-center px-3 py-1.5 rounded-xl border", isLoading ? "border-gray-100" : scoreColor)}>
+          {isLoading ? (
+            <Skeleton width={80} height={24} />
+          ) : (
+            <>
+              <div className="flex items-center gap-1 mb-0.5">
+                {[...Array(maxScore)].map((_, i) => (
+                  <Star key={i} className={cn("w-3.5 h-3.5", i < score ? "fill-current" : "text-gray-300 fill-transparent")} />
+                ))}
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider">Score: {score}/{maxScore}</span>
+            </>
+          )}
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
-        {conditions.map((condition) => (
-          <div
-            key={condition.id}
-            className={cn(
-              "flex items-start gap-3 p-4 rounded-2xl transition-colors",
-              condition.isMet ? "bg-emerald-50" : "bg-gray-50"
-            )}
-          >
-            <div className="mt-0.5 flex-shrink-0">
-              {condition.isMet ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              ) : (
-                <Circle className="w-5 h-5 text-gray-300" />
-              )}
+        {isLoading ? (
+          [...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50">
+              <Skeleton circle width={20} height={20} />
+              <div className="flex flex-col gap-2 w-full">
+                <Skeleton width="80%" height={20} />
+                <Skeleton width="40%" height={16} />
+              </div>
             </div>
-            <div className="flex flex-col items-start gap-2">
-              <span
-                className={cn(
-                  "font-medium text-sm sm:text-base leading-tight",
-                  condition.isMet ? "text-emerald-900" : "text-gray-700"
+          ))
+        ) : (
+          conditions.map((condition) => (
+            <div
+              key={condition.id}
+              className={cn(
+                "flex items-start gap-3 p-4 rounded-2xl transition-colors",
+                condition.isMet ? "bg-emerald-50" : "bg-gray-50"
+              )}
+            >
+              <div className="mt-0.5 flex-shrink-0">
+                {condition.isMet ? (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                ) : (
+                  <Circle className="w-5 h-5 text-gray-300" />
                 )}
-              >
-                {condition.label}
-              </span>
-              {condition.value && (
+              </div>
+              <div className="flex flex-col items-start gap-2">
                 <span
                   className={cn(
-                    "text-xs sm:text-sm font-mono font-medium px-2.5 py-1 rounded-md",
-                    condition.isMet
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-gray-200 text-gray-600"
+                    "font-medium text-sm sm:text-base leading-tight",
+                    condition.isMet ? "text-emerald-900" : "text-gray-700"
                   )}
                 >
-                  {condition.value}
+                  {condition.label}
                 </span>
-              )}
+                {condition.value && (
+                  <span
+                    className={cn(
+                      "text-xs sm:text-sm font-mono font-medium px-2.5 py-1 rounded-md",
+                      condition.isMet
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-gray-200 text-gray-600"
+                    )}
+                  >
+                    {condition.value}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="mt-auto flex flex-col gap-3">
-        <div
-          className={cn(
-            "p-4 rounded-2xl flex items-center justify-center font-semibold text-lg transition-all",
-            canTrade
-              ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-              : "bg-gray-100 text-gray-400"
-          )}
-        >
-          {canTrade ? "Setup Valide : Prêt à Trader" : "Setup Invalide : Attendre"}
-        </div>
+        {isLoading ? (
+          <Skeleton height={60} borderRadius={16} />
+        ) : (
+          <div
+            className={cn(
+              "p-4 rounded-2xl flex items-center justify-center font-semibold text-lg transition-all",
+              canTrade
+                ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                : "bg-gray-100 text-gray-400"
+            )}
+          >
+            {canTrade ? "Setup Valide : Prêt à Trader" : "Setup Invalide : Attendre"}
+          </div>
+        )}
         
-        {canTrade && onSaveTrade && (
+        {!isLoading && canTrade && onSaveTrade && (
           <button
             onClick={onSaveTrade}
             className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
           >
             <CheckCircle2 className="w-5 h-5" />
-            Enregistrer ce trade dans le Journal
+            Enregistrer ce trade dans l'Historique
           </button>
         )}
       </div>

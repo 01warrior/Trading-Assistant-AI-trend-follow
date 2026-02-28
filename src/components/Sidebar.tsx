@@ -13,14 +13,14 @@ export function Sidebar() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Graphiques", href: "/chart", icon: LineChart },
     { name: "Actualités", href: "/news", icon: Newspaper },
-    { name: "Journal", href: "/journal", icon: BookOpen },
+    { name: "Historique", href: "/journal", icon: BookOpen },
   ];
 
   return (
     <>
       <aside 
         className={cn(
-          "bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 transition-all duration-300 z-20",
+          "bg-white border-r border-gray-100 hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 z-20",
           isCollapsed ? "w-20" : "w-64"
         )}
       >

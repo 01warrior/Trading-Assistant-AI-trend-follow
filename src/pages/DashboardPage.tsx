@@ -8,6 +8,7 @@ import { cn } from "../lib/utils";
 import { calculateTradingPlan } from "../lib/tradingPlan";
 import { saveTrade } from "../services/storage";
 import { toast } from "sonner";
+import Skeleton from "react-loading-skeleton";
 
 export function DashboardPage() {
   const { symbol, baseAmount } = useAppContext();
@@ -55,7 +56,7 @@ export function DashboardPage() {
 
     saveTrade(newTrade);
     toast.success("Trade enregistré !", {
-      description: `Position ${suggestedType} sur ${symbol} ajoutée au journal.`,
+      description: `Position ${suggestedType} sur ${symbol} ajoutée à l'historique.`,
     });
   };
 
@@ -69,7 +70,7 @@ export function DashboardPage() {
             <span className="text-xs font-semibold uppercase tracking-wider">Prix Actuel</span>
           </div>
           <div className="text-2xl font-mono font-bold text-gray-900">
-            {isLoading ? "..." : data.currentPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+            {isLoading ? <Skeleton width={120} /> : data.currentPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
           </div>
         </div>
         
@@ -82,7 +83,7 @@ export function DashboardPage() {
             "text-2xl font-mono font-bold",
             isRsiValid ? "text-emerald-600" : "text-gray-900"
           )}>
-            {isLoading ? "..." : data.rsi.toFixed(2)}
+            {isLoading ? <Skeleton width={80} /> : data.rsi.toFixed(2)}
           </div>
         </div>
 
@@ -92,7 +93,7 @@ export function DashboardPage() {
             <span className="text-xs font-semibold uppercase tracking-wider">Tendance 1D</span>
           </div>
           <div className="text-lg font-semibold text-gray-900">
-            {isLoading ? "..." : data.dailyTrend}
+            {isLoading ? <Skeleton width={100} /> : data.dailyTrend}
           </div>
         </div>
 
@@ -102,7 +103,7 @@ export function DashboardPage() {
             <span className="text-xs font-semibold uppercase tracking-wider">Tendance 4H</span>
           </div>
           <div className="text-lg font-semibold text-gray-900">
-            {isLoading ? "..." : data.h4Trend}
+            {isLoading ? <Skeleton width={100} /> : data.h4Trend}
           </div>
         </div>
       </div>
@@ -110,7 +111,7 @@ export function DashboardPage() {
       {/* Middle Row: Screener & Plan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         <ScreenerWidget />
-        <TradingPlan conditions={conditions} canTrade={canTrade} onSaveTrade={handleSaveTrade} />
+        <TradingPlan conditions={conditions} canTrade={canTrade} onSaveTrade={handleSaveTrade} isLoading={isLoading} />
       </div>
     </div>
   );

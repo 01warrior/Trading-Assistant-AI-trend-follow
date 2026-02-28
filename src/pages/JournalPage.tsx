@@ -26,7 +26,7 @@ export function JournalPage() {
     <div className="w-full space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">
-          Journal de Trading
+          Historique des Trades
         </h1>
         <p className="text-gray-500 font-medium">
           Gérez vos positions et suivez vos performances sur {symbol}.

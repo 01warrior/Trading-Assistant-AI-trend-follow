@@ -1,5 +1,6 @@
 import { useNews } from "../hooks/useNews";
 import { ExternalLink, Clock, Newspaper } from "lucide-react";
+import Skeleton from "react-loading-skeleton";
 
 export function NewsPage() {
   const { news, isLoading } = useNews();
@@ -16,8 +17,21 @@ export function NewsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-[400px]">
+              <Skeleton height={192} className="w-full" />
+              <div className="p-6 flex flex-col flex-1">
+                <div className="flex items-center justify-between mb-4">
+                  <Skeleton width={80} height={20} borderRadius={999} />
+                  <Skeleton width={100} height={16} />
+                </div>
+                <Skeleton count={2} height={24} className="mb-2" />
+                <Skeleton count={3} height={16} className="mb-4" />
+                <Skeleton width={100} height={20} className="mt-auto" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -27,7 +41,7 @@ export function NewsPage() {
               href={item.link} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="bg-white rounded-3xl shadow-sm border border-gray-100 hover:border-orange-200 hover:shadow-md transition-all group flex flex-col overflow-hidden"
+              className="bg-white rounded-3xl shadow-sm border border-gray-100 hover:border-orange-200 hover:shadow-md transition-all group flex flex-col overflow-hidden h-full"
             >
               {item.imageUrl && (
                 <div className="w-full h-48 overflow-hidden bg-gray-100">

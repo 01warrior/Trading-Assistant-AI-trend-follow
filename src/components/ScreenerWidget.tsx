@@ -2,6 +2,7 @@ import { useScreener } from "../hooks/useScreener";
 import { RefreshCw, Star, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAppContext } from "../context/AppContext";
+import Skeleton from "react-loading-skeleton";
 
 export function ScreenerWidget() {
   const { results, isScanning, lastScan, scan } = useScreener();
@@ -15,7 +16,7 @@ export function ScreenerWidget() {
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1">Screener IA</h2>
           <p className="text-sm text-gray-500">
-            {lastScan ? `Dernier scan: ${lastScan.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : "Scan en cours..."}
+            {lastScan ? `Dernier scan: ${lastScan.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : isScanning ? "Scan en cours..." : "En attente"}
           </p>
         </div>
         <button 
@@ -30,9 +31,22 @@ export function ScreenerWidget() {
 
       <div className="flex flex-col gap-3 flex-1">
         {isScanning && results.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-            <RefreshCw className="w-8 h-8 animate-spin mb-2 text-orange-400" />
-            <p className="text-sm font-medium">Analyse des marchés...</p>
+          <div className="flex flex-col gap-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-gray-50">
+                <div className="flex items-center gap-3">
+                  <Skeleton circle width={40} height={40} />
+                  <div>
+                    <Skeleton width={80} height={20} />
+                    <Skeleton width={60} height={15} />
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Skeleton width={60} height={20} />
+                  <Skeleton width={80} height={15} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : topResults.length > 0 ? (
           topResults.map((item) => (

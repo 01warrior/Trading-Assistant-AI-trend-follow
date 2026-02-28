@@ -75,22 +75,22 @@ export function FloatingChat() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-24 md:bottom-6 right-6 z-50 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            layout
             initial={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
             animate={{ 
               opacity: 1, 
               scale: 1, 
               y: 0, 
-              x: 0,
-              height: isMinimized ? "auto" : "600px"
+              x: 0
             }}
             exit={{ opacity: 0, scale: 0.9, y: 20, x: 20 }}
             className={cn(
-              "bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden mb-4 w-[380px] sm:w-[420px]",
-              isMinimized ? "h-auto" : "h-[600px]"
+              "bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden mb-4 w-[calc(100vw-3rem)] sm:w-[420px]",
+              isMinimized ? "h-auto" : "h-[60vh] sm:h-[600px]"
             )}
           >
             {/* Header */}
