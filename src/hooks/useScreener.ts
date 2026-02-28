@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import { fetchKlines } from "../services/binance";
-import { calculateEMA, calculateRSI } from "../lib/indicators";
+import { calculateRSI } from "../lib/indicators";
 import { calculateTradingPlan } from "../lib/tradingPlan";
-
-const SYMBOLS = [
-  "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", 
-  "ADAUSDT", "DOGEUSDT", "DOTUSDT", "MATICUSDT", "LINKUSDT", 
-  "AVAXUSDT", "LTCUSDT"
-];
+import { SYMBOLS } from "../constants";
+import { analyzeMarketData } from "../lib/marketUtils";
 
 export interface ScreenerResult {
   symbol: string;
@@ -43,52 +39,25 @@ export function useScreener() {
               const h4Closes = h4Klines.map((k) => k.close);
               const dailyCloses = dailyKlines.map((k) => k.close);
               const h4Volumes = h4Klines.map((k) => k.volume);
+              const currentPrice = h4Closes[h4Closes.length - 1];
 
-              const ema20 = calculateEMA(h4Closes, 20).pop() || 0;
-              const ema50 = calculateEMA(h4Closes, 50).pop() || 0;
+              const analysis = analyzeMarketData(dailyCloses, h4Closes, h4Volumes, currentPrice);
               const rsi = calculateRSI(h4Closes, 14).pop() || 0;
 
-              const dailyEma20 = calculateEMA(dailyCloses, 20).pop() || 0;
-              const dailyEma50 = calculateEMA(dailyCloses, 50).pop() || 0;
-              const dailyPrice = dailyCloses[dailyCloses.length - 1];
-              
-              let dailyTrend = "Neutre";
-              if (dailyEma20 > dailyEma50 && dailyPrice > dailyEma20 && dailyPrice > dailyEma50) {
-                dailyTrend = "Haussière";
-              } else if (dailyEma20 < dailyEma50 && dailyPrice < dailyEma20 && dailyPrice < dailyEma50) {
-                dailyTrend = "Baissière";
-              }
-
-              const h4Price = h4Closes[h4Closes.length - 1];
-              let h4Trend = "Neutre";
-              if (ema20 > ema50 && h4Price > ema20 && h4Price > ema50) {
-                h4Trend = "Haussière";
-              } else if (ema20 < ema50 && h4Price < ema20 && h4Price < ema50) {
-                h4Trend = "Baissière";
-              }
-
-              const currentVolume = h4Volumes[h4Volumes.length - 1];
-              const avgVolume = h4Volumes.slice(-11, -1).reduce((a, b) => a + b, 0) / 10;
-
               const data = {
-                currentPrice: h4Price,
-                dailyTrend,
-                h4Trend,
+                currentPrice,
+                ...analysis,
                 rsi,
-                ema20,
-                ema50,
-                currentVolume,
-                avgVolume,
               };
 
               const plan = calculateTradingPlan(data);
 
               return {
                 symbol,
-                price: h4Price,
+                price: currentPrice,
                 score: plan.score,
                 maxScore: plan.maxScore,
-                trend: h4Trend
+                trend: analysis.h4Trend
               };
             }
           } catch (e) {
@@ -116,7 +85,7 @@ export function useScreener() {
 
   useEffect(() => {
     scan();
-    const interval = setInterval(scan, 5 * 60 * 1000); // Scan every 5 minutes
+    const interval = setInterval(scan, 2 * 60 * 1000); // Scan every 2 minutes
     return () => clearInterval(interval);
   }, []);
 

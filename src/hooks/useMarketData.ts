@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchKlines } from "../services/binance";
 import { calculateEMA, calculateRSI } from "../lib/indicators";
+import { analyzeMarketData } from "../lib/marketUtils";
 
 export function useMarketData(symbol: string) {
   const [isLoading, setIsLoading] = useState(true);
@@ -52,43 +53,15 @@ export function useMarketData(symbol: string) {
           const h4Closes = h4Klines.map((k) => k.close);
           const dailyCloses = dailyKlines.map((k) => k.close);
           const h4Volumes = h4Klines.map((k) => k.volume);
+          const currentPrice = h4Closes[h4Closes.length - 1];
 
-          const ema20 = calculateEMA(h4Closes, 20).pop() || 0;
-          const ema50 = calculateEMA(h4Closes, 50).pop() || 0;
+          const analysis = analyzeMarketData(dailyCloses, h4Closes, h4Volumes, currentPrice);
           const rsi = calculateRSI(h4Closes, 14).pop() || 0;
-
-          const dailyEma20 = calculateEMA(dailyCloses, 20).pop() || 0;
-          const dailyEma50 = calculateEMA(dailyCloses, 50).pop() || 0;
-          const dailyPrice = dailyCloses[dailyCloses.length - 1];
-          
-          let dailyTrend = "Neutre";
-          if (dailyEma20 > dailyEma50 && dailyPrice > dailyEma20 && dailyPrice > dailyEma50) {
-            dailyTrend = "Haussière";
-          } else if (dailyEma20 < dailyEma50 && dailyPrice < dailyEma20 && dailyPrice < dailyEma50) {
-            dailyTrend = "Baissière";
-          }
-
-          // Use the last close from h4 for trend calculation initially, but it will be updated by WS
-          const h4Price = h4Closes[h4Closes.length - 1];
-          let h4Trend = "Neutre";
-          if (ema20 > ema50 && h4Price > ema20 && h4Price > ema50) {
-            h4Trend = "Haussière";
-          } else if (ema20 < ema50 && h4Price < ema20 && h4Price < ema50) {
-            h4Trend = "Baissière";
-          }
-
-          const currentVolume = h4Volumes[h4Volumes.length - 1];
-          const avgVolume = h4Volumes.slice(-11, -1).reduce((a, b) => a + b, 0) / 10;
 
           setData((prev) => ({
             ...prev,
-            dailyTrend,
-            h4Trend,
+            ...analysis,
             rsi,
-            ema20,
-            ema50,
-            currentVolume,
-            avgVolume,
           }));
         }
       } catch (error) {

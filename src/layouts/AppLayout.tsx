@@ -3,6 +3,7 @@ import { Sidebar } from "../components/Sidebar";
 import { FloatingChat } from "../components/FloatingChat";
 import { Wallet } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
+import { SYMBOLS } from "../constants";
 
 export function AppLayout() {
   const { symbol, setSymbol, baseAmount, setBaseAmount } = useAppContext();
@@ -37,9 +38,11 @@ export function AppLayout() {
                 onChange={(e) => setSymbol(e.target.value)}
                 className="bg-gray-50 border-none text-gray-900 font-semibold rounded-full pl-5 pr-9 py-1.5 text-sm focus:ring-2 focus:ring-orange-500/20 cursor-pointer appearance-none outline-none"
               >
-                <option value="BTCUSDT">BTC/USDT</option>
-                <option value="ETHUSDT">ETH/USDT</option>
-                <option value="SOLUSDT">SOL/USDT</option>
+                {SYMBOLS.map((s) => (
+                  <option key={s} value={s}>
+                    {s.replace("USDT", "")}/USDT
+                  </option>
+                ))}
               </select>
               <div className="absolute right-3 pointer-events-none">
                 <svg width="10" height="6" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
